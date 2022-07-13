@@ -152,3 +152,4 @@ cython_debug/
 #.idea/
 credentials.json
 token.json
+config.json
