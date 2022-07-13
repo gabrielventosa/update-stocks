@@ -1,7 +1,9 @@
 from __future__ import print_function
+from asyncio.windows_events import NULL
 
 import os.path
 import json
+import requests
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -21,6 +23,16 @@ def main():
         config = json.load(f)
     SPREADSHEET_ID = config['SPREADSHEET_ID']
     SAMPLE_RANGE_NAME =  config['RANGE_NAME']
+    MAGENTO_SITE = config['MAGENTO_SITE']
+    MAGENTO_ADMIN_USER = config['MAGENTO_ADMIN_USER']
+    MAGENTO_ADMIN_PASSWORD = config['MAGENTO_ADMIN_PASSWORD']
+
+    bearer = getMagentoAuth(MAGENTO_SITE, MAGENTO_ADMIN_USER, MAGENTO_ADMIN_PASSWORD)
+    if bearer == NULL:
+        print ("Error loging in Magento")
+        return
+    
+
 
     """Sheets API
     """
@@ -66,12 +78,39 @@ def main():
                     for row in values:
                         if len(row) >=4:
                             # Print columns A and E, which correspond to indices 0 and 4.
-                            print('%s, %s' % (row[0]+"-"+row[1]+"-"+row[2], row[3]))
+                            sku = row[0]+"-"+row[1]+"-"+row[2]
+                            magitem = getMagentoStockItem(MAGENTO_SITE, bearer, sku)
+                            if (magitem):
+                                qty = magitem['extension_attributes']['stock_item']['qty']
+                                #print(f'Quantity in Magento Store: {qty}')
+                                print (f'SKU: {sku}, Qty in sheet: {row[3]}, Qty in Magento: {qty}')
+                            else:
+                                print('Not Found in Magento')
                         else:
                             print('No qty')
     except HttpError as err:
         print(err)
 
+def getMagentoAuth(url, user, password):
+    url = url+'/index.php/rest/V1/integration/admin/token'
+    auth = {"username": user, "password": password}
+    response = requests.post(url, json=auth)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print("Error in authentication, error code: %s " % response.status_code)
+        return NULL
+
+def getMagentoStockItem(url, bearer, sku):
+    url = url+'/index.php/rest/V1/products/'+sku
+    header = {"Authorization": "Bearer "+bearer}
+    response = requests.get(url, headers=header)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        message = response.json()['message']
+        print(f'Error getting product, message: {message} \nsku: {sku}  \nurl: {url}')
+        return NULL
 
 if __name__ == '__main__':
     main()
