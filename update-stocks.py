@@ -6,6 +6,7 @@ import os.path
 import json
 from turtle import up
 import requests
+from  urllib.parse import quote
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -105,7 +106,7 @@ def getMagentoAuth(url, user, password):
         return NULL
 
 def getMagentoStockItem(url, bearer, sku):
-    url = url+'/index.php/rest/V1/products/'+sku
+    url = url+quote('/index.php/rest/V1/products/'+sku)
     header = {"Authorization": "Bearer "+bearer}
     response = requests.get(url, headers=header)
     if response.status_code == 200:
@@ -118,7 +119,7 @@ def getMagentoStockItem(url, bearer, sku):
 def updateMagentoStockItemQty(url, bearer, product, qty):
     sku = product["sku"]
     item_id = str(product['extension_attributes']['stock_item']["item_id"])
-    url = url+'/index.php/rest/V1/products/' + sku + '/stockItems/' + item_id
+    url = url+quote('/index.php/rest/V1/products/' + sku + '/stockItems/' + item_id)
     header = {'Authorization': 'Bearer '+bearer, 'content-type': 'application/json'}
     response = requests.get(url, headers=header)
     update = {"stockItem":{"qty": qty}}

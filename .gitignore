@@ -153,3 +153,4 @@ cython_debug/
 credentials.json
 token.json
 config.json
+*.txt
