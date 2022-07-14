@@ -31,7 +31,7 @@ def main():
     MAGENTO_ADMIN_PASSWORD = config['MAGENTO_ADMIN_PASSWORD']
 
     bearer = getMagentoAuth(MAGENTO_SITE, MAGENTO_ADMIN_USER, MAGENTO_ADMIN_PASSWORD)
-    if bearer == NULL:
+    if bearer is None:
         print ("Error loging in Magento")
         return
     
@@ -83,7 +83,7 @@ def main():
                             # Print columns A and E, which correspond to indices 0 and 4.
                             sku = row[0]+"-"+row[1]+"-"+row[2]
                             magitem = getMagentoStockItem(MAGENTO_SITE, bearer, sku)
-                            if (magitem):
+                            if magitem is not None:
                                 qty = magitem['extension_attributes']['stock_item']['qty']
                                 #print(f'Quantity in Magento Store: {qty}')
                                 print (f'SKU: {sku}, Qty in sheet: {row[3]}, Qty in Magento: {qty}')
@@ -103,7 +103,7 @@ def getMagentoAuth(url, user, password):
         return response.json()
     else:
         print("Error in authentication, error code: %s " % response.status_code)
-        return NULL
+        return None
 
 def getMagentoStockItem(url, bearer, sku):
     url = url+quote('/index.php/rest/V1/products/'+sku)
@@ -114,7 +114,7 @@ def getMagentoStockItem(url, bearer, sku):
     else:
         message = response.json()['message']
         print(f'Error getting product, message: {message} \nsku: {sku}  \nurl: {url}')
-        return NULL
+        return None
 
 def updateMagentoStockItemQty(url, bearer, product, qty):
     sku = product["sku"]
@@ -127,7 +127,7 @@ def updateMagentoStockItemQty(url, bearer, product, qty):
     if response.status_code != 200:
         message = response.json()['message']
         print(f'Error updating product, message: {message} \nsku: {sku}  \nurl: {url} \ndata : {json.dumps(update)}')
-        return NULL
+        return None
 
 
 if __name__ == '__main__':
