@@ -1,8 +1,10 @@
 from __future__ import print_function
 from asyncio.windows_events import NULL
+from math import prod
 
 import os.path
 import json
+from turtle import up
 import requests
 
 from google.auth.transport.requests import Request
@@ -84,6 +86,7 @@ def main():
                                 qty = magitem['extension_attributes']['stock_item']['qty']
                                 #print(f'Quantity in Magento Store: {qty}')
                                 print (f'SKU: {sku}, Qty in sheet: {row[3]}, Qty in Magento: {qty}')
+                                result = updateMagentoStockItemQty(MAGENTO_SITE, bearer, magitem, row[3])
                             else:
                                 print('Not Found in Magento')
                         else:
@@ -111,6 +114,20 @@ def getMagentoStockItem(url, bearer, sku):
         message = response.json()['message']
         print(f'Error getting product, message: {message} \nsku: {sku}  \nurl: {url}')
         return NULL
+
+def updateMagentoStockItemQty(url, bearer, product, qty):
+    sku = product["sku"]
+    item_id = str(product['extension_attributes']['stock_item']["item_id"])
+    url = url+'/index.php/rest/V1/products/' + sku + '/stockItems/' + item_id
+    header = {'Authorization': 'Bearer '+bearer, 'content-type': 'application/json'}
+    response = requests.get(url, headers=header)
+    update = {"stockItem":{"qty": qty}}
+    response = requests.put(url, headers=header, data=json.dumps(update))
+    if response.status_code != 200:
+        message = response.json()['message']
+        print(f'Error updating product, message: {message} \nsku: {sku}  \nurl: {url} \ndata : {json.dumps(update)}')
+        return NULL
+
 
 if __name__ == '__main__':
     main()
