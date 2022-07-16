@@ -122,7 +122,7 @@ def updateMagentoStockItemQty(url, bearer, product, qty):
     url = url+quote('/index.php/rest/V1/products/' + sku + '/stockItems/' + item_id)
     header = {'Authorization': 'Bearer '+bearer, 'content-type': 'application/json'}
     response = requests.get(url, headers=header)
-    update = {"stockItem":{"qty": qty}}
+    update = {"stockItem":{"qty": qty, "is_in_stock": "true"}}
     response = requests.put(url, headers=header, data=json.dumps(update))
     if response.status_code != 200:
         message = response.json()['message']
