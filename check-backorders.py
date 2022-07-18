@@ -88,8 +88,9 @@ def main():
                                 min_qty = int(magitem['extension_attributes']['stock_item']['min_qty'])
                                 backorders = salable_qty - abs(min_qty)
                                 if backorders < 0:
-                                    print (f'SKU: {sku}, Qty in sheet: {row[3]}, ' +
-                                    f'Salable Qty: {str(salable_qty)}, ' + 
+                                    print (f'SKU: {sku}, ' +
+                                    f'Qty in sheet: {row[3]}, ' +
+                                    #f'Salable Qty: {str(salable_qty)}, ' + 
                                     f'Backorders: {str(abs(backorders))}')
                             else:
                                 print('Not Found in Magento')
