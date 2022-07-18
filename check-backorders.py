@@ -15,7 +15,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 # The ID and range of a sample spreadsheet.
 
@@ -29,6 +29,8 @@ def main():
     MAGENTO_SITE = config['MAGENTO_SITE']
     MAGENTO_ADMIN_USER = config['MAGENTO_ADMIN_USER']
     MAGENTO_ADMIN_PASSWORD = config['MAGENTO_ADMIN_PASSWORD']
+    RESULT_SPREADSHEET_ID = config["RESULT_SPREADSHEET_ID"]
+    RESULT_SHEET_NAME = config["RESULT_SHEET_NAME"]
 
     bearer = getMagentoAuth(MAGENTO_SITE, MAGENTO_ADMIN_USER, MAGENTO_ADMIN_PASSWORD)
     if bearer is None:
@@ -92,6 +94,8 @@ def main():
                                     f'Qty in sheet: {row[3]}, ' +
                                     #f'Salable Qty: {str(salable_qty)}, ' + 
                                     f'Backorders: {str(abs(backorders))}')
+                                    data = [sku, abs(backorders)]
+                                    insertRowInGoogle(service, RESULT_SPREADSHEET_ID, RESULT_SHEET_NAME, data)
                             else:
                                 print('Not Found in Magento')
                         else:
@@ -145,6 +149,22 @@ def getProductSalableQty(url, bearer, sku, stock=1):
         return None
     else:
         return response.json()
+
+def insertRowInGoogle(service, spreadsheet_id, sheet_name, array):
+    range_notation = f"'{sheet_name}'!A2"
+    body = {
+        'values': [
+            array
+        ]
+    }
+    sheet = service.spreadsheets()
+    result = sheet.values().append(spreadsheetId=spreadsheet_id,
+                               range=range_notation,
+                               body=body,
+                               valueInputOption="RAW",
+                               insertDataOption="INSERT_ROWS").execute()
+
+
 
 
 if __name__ == '__main__':
