@@ -30,6 +30,10 @@ def main():
     MAGENTO_ADMIN_USER = config['MAGENTO_ADMIN_USER']
     MAGENTO_ADMIN_PASSWORD = config['MAGENTO_ADMIN_PASSWORD']
 
+    CLEAR_COLORS = ['Verde', 'Rojo', 'Fiusha', 'Cobalto', 'Blanco', 'Nude', 'Beige', 'Mica Camel', 'LIla', 'Camel']
+    DARK_COLORS = ['Negro']
+
+
     bearer = getMagentoAuth(MAGENTO_SITE, MAGENTO_ADMIN_USER, MAGENTO_ADMIN_PASSWORD)
     if bearer is None:
         print ("Error loging in Magento")
@@ -68,6 +72,8 @@ def main():
         total_pieces = 0
         pieces_by_size = {}
         pieces_by_color = {}
+        dark_pieces = 0
+        clear_pieces = 0
         items = getMagentoOrderItems(MAGENTO_SITE, bearer,str(8))
         for i in items['items']:
             sku = i['sku']
@@ -78,7 +84,7 @@ def main():
             total_pieces = total_pieces + qty_ordered
             qty_backordered = 0
             try:
-                qty_ordered = i['qty_backordered']
+                qty_backordered = i['qty_backordered']
             except:
                 pass
             print(f'SKU: {sku}, Qty: {qty_ordered}')
@@ -86,12 +92,22 @@ def main():
                 pieces_by_size[size] = 0
             if color not in pieces_by_color:
                 pieces_by_color[color] = 0
-            pieces_by_size[size] = qty_ordered+pieces_by_size[size]
-            pieces_by_color[color] = qty_ordered+pieces_by_color[color]
+            if color in CLEAR_COLORS:
+                clear_pieces +=qty_ordered
+            if color in DARK_COLORS:
+                dark_pieces +=qty_ordered
+
+            pieces_by_size[size] = pieces_by_size[size]+qty_ordered
+            pieces_by_color[color] = pieces_by_color[color]+qty_ordered
             #print(size)
+            print(f'Total pieces: {total_pieces}')
+            print(f'Clear pieces: {clear_pieces}')
+            print(f'Dark pieces: {dark_pieces}')
         print(pieces_by_size)
         print(pieces_by_color)
         print(f'Total pieces: {total_pieces}')
+        print(f'Clear pieces: {clear_pieces}')
+        print(f'Dark pieces: {dark_pieces}')
 
     except HttpError as err:
         print(err)
