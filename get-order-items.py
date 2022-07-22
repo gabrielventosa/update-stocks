@@ -1,6 +1,6 @@
 from __future__ import print_function
 from asyncio.windows_events import NULL
-from math import pi, prod
+from math import pi, gcd, ceil
 
 import os.path
 import json
@@ -32,7 +32,7 @@ def main():
 
     CLEAR_COLORS = ['Verde', 'Rojo', 'Fiusha', 'Cobalto', 'Blanco', 'Nude', 'Beige', 'Mica Camel', 'LIla', 'Camel']
     DARK_COLORS = ['Negro']
-
+    PRODUCTION_LOT =[1,2,3,3,2,1]
 
     bearer = getMagentoAuth(MAGENTO_SITE, MAGENTO_ADMIN_USER, MAGENTO_ADMIN_PASSWORD)
     if bearer is None:
@@ -72,9 +72,9 @@ def main():
         total_pieces = 0
         pieces_by_size = {}
         pieces_by_color = {}
-        dark_pieces = 0
-        clear_pieces = 0
-        items = getMagentoOrderItems(MAGENTO_SITE, bearer,str(8))
+        dark_pieces = {}
+        clear_pieces = {}
+        items = getMagentoOrderItems(MAGENTO_SITE, bearer,str(9))
         for i in items['items']:
             sku = i['sku']
             size = sku.split('-')[2] 
@@ -92,10 +92,20 @@ def main():
                 pieces_by_size[size] = 0
             if color not in pieces_by_color:
                 pieces_by_color[color] = 0
+            """   
             if color in CLEAR_COLORS:
                 clear_pieces +=qty_ordered
             if color in DARK_COLORS:
                 dark_pieces +=qty_ordered
+            """
+            if color in CLEAR_COLORS:
+                if size not in clear_pieces:
+                    clear_pieces[size] =0
+                clear_pieces[size] += qty_ordered
+            else:
+                if size not in dark_pieces:
+                    dark_pieces[size] =0
+                dark_pieces[size] += qty_ordered
 
             pieces_by_size[size] = pieces_by_size[size]+qty_ordered
             pieces_by_color[color] = pieces_by_color[color]+qty_ordered
@@ -108,6 +118,17 @@ def main():
         print(f'Total pieces: {total_pieces}')
         print(f'Clear pieces: {clear_pieces}')
         print(f'Dark pieces: {dark_pieces}')
+        darks = dark_pieces.values()
+        clears = clear_pieces.values()
+        dark_gcd = gcd(*darks)
+        clear_gcd = gcd(*clears)
+        print(f'GCD Clear: {clear_gcd}, GCD Dark: {dark_gcd}')
+       
+        lot = PRODUCTION_LOT
+        cuts_clear = getCutNumbers(clears, lot)
+        cuts_dark = getCutNumbers(darks, lot)
+        print(f'Cuts Clear: {cuts_clear}, Cuts Darks: {cuts_dark}')
+
 
     except HttpError as err:
         print(err)
@@ -164,6 +185,10 @@ def getMagentoOrderItems(url, bearer, orderId):
         print(f'Error updating product, message: {message}   \nurl: {url}')
         return None
     return response.json()
+
+def getCutNumbers(requested, lot):
+    n = list(map((lambda a,b: ceil(a/b)), requested, lot))
+    return max(n)
 
 if __name__ == '__main__':
     main()
