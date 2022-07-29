@@ -30,7 +30,7 @@ def main():
     MAGENTO_ADMIN_USER = config['MAGENTO_ADMIN_USER']
     MAGENTO_ADMIN_PASSWORD = config['MAGENTO_ADMIN_PASSWORD']
 
-    CLEAR_COLORS = ['Verde', 'Rojo', 'Fiusha', 'Cobalto', 'Blanco', 'Nude', 'Beige', 'Mica Camel', 'LIla', 'Camel']
+    CLEAR_COLORS = ['Verde', 'Rojo', 'Fiusha', 'Cobalto', 'Blanco', 'Nude', 'Beige', 'Mica Camel', 'LIla', 'Lila', 'Camel']
     DARK_COLORS = ['Negro']
     PRODUCTION_LOT =[1,2,3,3,2,1]
 
@@ -74,7 +74,7 @@ def main():
         pieces_by_color = {}
         dark_pieces = {}
         clear_pieces = {}
-        items = getMagentoOrderItems(MAGENTO_SITE, bearer,str(9))
+        items = getMagentoOrderItems(MAGENTO_SITE, bearer,str(19))
         for i in items['items']:
             sku = i['sku']
             size = sku.split('-')[2] 
@@ -87,7 +87,7 @@ def main():
                 qty_backordered = i['qty_backordered']
             except:
                 pass
-            print(f'SKU: {sku}, Qty: {qty_ordered}')
+            print(f'SKU: {sku}, Qty: {qty_ordered}, BackOrders: {qty_backordered}')
             if size not in pieces_by_size:
                 pieces_by_size[size] = 0
             if color not in pieces_by_color:
@@ -110,9 +110,9 @@ def main():
             pieces_by_size[size] = pieces_by_size[size]+qty_ordered
             pieces_by_color[color] = pieces_by_color[color]+qty_ordered
             #print(size)
-            print(f'Total pieces: {total_pieces}')
-            print(f'Clear pieces: {clear_pieces}')
-            print(f'Dark pieces: {dark_pieces}')
+            #print(f'Total pieces: {total_pieces}')
+            #print(f'Clear pieces: {clear_pieces}')
+            #print(f'Dark pieces: {dark_pieces}')
         print(pieces_by_size)
         print(pieces_by_color)
         print(f'Total pieces: {total_pieces}')
