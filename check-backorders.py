@@ -99,7 +99,8 @@ def main():
                             else:
                                 print('Not Found in Magento')
                         else:
-                            print('No qty')
+                            sku = row[0]+"-"+row[1]+"-"+row[2]
+                            print(f'No qty, SKU: {sku}')
     except HttpError as err:
         print(err)
 
