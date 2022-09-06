@@ -30,7 +30,7 @@ def main():
     MAGENTO_ADMIN_USER = config['MAGENTO_ADMIN_USER']
     MAGENTO_ADMIN_PASSWORD = config['MAGENTO_ADMIN_PASSWORD']
     RESULT_SPREADSHEET_ID = config["RESULT_SPREADSHEET_ID"]
-    RESULT_SHEET_NAME = config["RESULT_SHEET_NAME"]
+    RESULT_SHEET_NAME = config["RESULT_SHEET_NAME2"]
 
     bearer = getMagentoAuth(MAGENTO_SITE, MAGENTO_ADMIN_USER, MAGENTO_ADMIN_PASSWORD)
     if bearer is None:
@@ -89,8 +89,8 @@ def main():
                             if magitem is not None:
                                 salable_qty = (getProductSalableQty(MAGENTO_SITE, bearer, sku))
                                 min_qty = int(magitem['extension_attributes']['stock_item']['min_qty'])
-                                backorders = salable_qty - abs(min_qty)
-                                if backorders < 0:
+                                backorders = salable_qty - abs(min_qty) - 2
+                                if backorders <= 0:
                                     print (f'SKU: {sku}, ' +
                                     f'Qty in sheet: {row[3]}, ' +
                                     #f'Salable Qty: {str(salable_qty)}, ' + 

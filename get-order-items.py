@@ -74,7 +74,7 @@ def main():
         pieces_by_color = {}
         dark_pieces = {}
         clear_pieces = {}
-        items = getMagentoOrderItems(MAGENTO_SITE, bearer,str(19))
+        items = getMagentoOrderItems(MAGENTO_SITE, bearer,str(16))
         for i in items['items']:
             sku = i['sku']
             size = sku.split('-')[2] 

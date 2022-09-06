@@ -24,17 +24,15 @@ def main():
     """Configuration"""
     with open('config.json', 'r') as f:
         config = json.load(f)
-    SPREADSHEET_ID = config['SPREADSHEET_ID']
+    SPREADSHEET_ID = config['DELIVER_SPRADSHEET_ID']
     SAMPLE_RANGE_NAME =  config['RANGE_NAME']
     MAGENTO_SITE = config['MAGENTO_SITE']
     MAGENTO_ADMIN_USER = config['MAGENTO_ADMIN_USER']
     MAGENTO_ADMIN_PASSWORD = config['MAGENTO_ADMIN_PASSWORD']
-    RESULT_SPREADSHEET_ID = config["RESULT_SPREADSHEET_ID"]
-    RESULT_SHEET_NAME = config["RESULT_SHEET_NAME"]
 
     bearer = getMagentoAuth(MAGENTO_SITE, MAGENTO_ADMIN_USER, MAGENTO_ADMIN_PASSWORD)
     if bearer is None:
-        print ("Error logging in Magento")
+        print ("Error loging in Magento")
         return
     
 
@@ -69,7 +67,7 @@ def main():
         for s in sheets:
             title = s.get("properties", {}).get("title", "Sheet1")
             sheet_id = s.get("properties", {}).get("sheetId", 0)
-            #print('Model Name: %s' % title)
+            print('Model Name: %s' % title)
 
             result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
                                         range=title+"!"+SAMPLE_RANGE_NAME).execute()
@@ -79,30 +77,22 @@ def main():
                 print('No data found.')
                 continue
             else:
-                    print(f'ID: {SPREADSHEET_ID} Title: {title}')
-                    #print('SKU, Qty')
+                    print('SKU, Qty')
                     for row in values:
-                        if len(row) >=4:
+                        if len(row) >=2:
                             # Print columns A and E, which correspond to indices 0 and 4.
-                            sku = row[0]+"-"+row[1]+"-"+row[2]
+                            sku = row[0]
                             magitem = getMagentoStockItem(MAGENTO_SITE, bearer, sku)
                             if magitem is not None:
-                                salable_qty = (getProductSalableQty(MAGENTO_SITE, bearer, sku))
-                                min_qty = int(magitem['extension_attributes']['stock_item']['min_qty'])
-                                backorders = salable_qty - abs(min_qty)
-                                if backorders < 0:
-                                    print (f'SKU: {sku}, ' +
-                                    f'Qty in sheet: {row[3]}, ' +
-                                    #f'Salable Qty: {str(salable_qty)}, ' + 
-                                    f'Backorders: {str(abs(backorders))}')
-                                    data = [sku, abs(backorders)]
-                                    insertRowInGoogle(service, RESULT_SPREADSHEET_ID, RESULT_SHEET_NAME, data)
+                                qty = magitem['extension_attributes']['stock_item']['qty']
+                                total = qty + int(row[1])
+                                #print(f'Quantity in Magento Store: {qty}')
+                                print (f'SKU: {sku}, Qty in sheet: {row[1]}, Qty in Magento: {qty}, Total: {total}')
+                                result = updateMagentoStockItemQty(MAGENTO_SITE, bearer, magitem, total)
                             else:
                                 print('Not Found in Magento')
                         else:
-                            #sku = row[0]+"-"+row[1]+"-"+row[2]
-                            print(f'No qty, SKU: {sku}')
-                            #print(row)
+                            print('No qty')
     except HttpError as err:
         print(err)
 
@@ -139,35 +129,6 @@ def updateMagentoStockItemQty(url, bearer, product, qty):
         message = response.json()['message']
         print(f'Error updating product, message: {message} \nsku: {sku}  \nurl: {url} \ndata : {json.dumps(update)}')
         return None
-
-def getProductSalableQty(url, bearer, sku, stock=1):
-    url = url+quote('/index.php/rest/default/V1/inventory/get-product-salable-quantity/' + sku + '/' + str(stock))
-    header = {'Authorization': 'Bearer '+bearer, 'content-type': 'application/json'}
-    response = requests.get(url, headers=header)
-    #update = {"stockItem":{"qty": qty, "is_in_stock": "true"}}
-    response = requests.get(url, headers=header)
-    if response.status_code != 200:
-        message = response.json()['message']
-        print(f'Error, message: {message} \nsku: {sku}  \nurl: {url}')
-        return None
-    else:
-        return response.json()
-
-def insertRowInGoogle(service, spreadsheet_id, sheet_name, array):
-    range_notation = f"'{sheet_name}'!A2"
-    body = {
-        'values': [
-            array
-        ]
-    }
-    sheet = service.spreadsheets()
-    result = sheet.values().append(spreadsheetId=spreadsheet_id,
-                               range=range_notation,
-                               body=body,
-                               valueInputOption="RAW",
-                               insertDataOption="INSERT_ROWS").execute()
-
-
 
 
 if __name__ == '__main__':
